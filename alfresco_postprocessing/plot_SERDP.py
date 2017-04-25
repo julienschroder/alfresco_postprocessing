@@ -589,7 +589,7 @@ def launcher(obs_json_fn, model , out ) :
     from collections import defaultdict
 
     json = os.path.join(out , 'JSON' , model + '.json' )
-    json_obs = os.path.join(out , 'JSON' , 'Observed.json' )
+    json_obs = os.path.join( obs_json_fn )
     print model
     print out
     print json
@@ -597,7 +597,7 @@ def launcher(obs_json_fn, model , out ) :
     scenario1 = Scenario( json, model, 'scenario1', model , '#000000')
     observed = Scenario( json_obs, model, 'Observed', "Historical", '#B22222' )
 
-    visual = os.path.join( out , 'Plots_corec' )
+    visual = os.path.join( out , 'Plots_Julien' )
     if not os.path.exists( visual ):
         os.mkdir( visual )
 
@@ -614,7 +614,8 @@ def launcher(obs_json_fn, model , out ) :
 
 
     pdf = os.path.join( visual, '_'.join([ model,'plots']) + '.pdf' )
-
+    
+    #might want to get ride of that if a huge amounts of domains are to be processed...
     with PdfPages(pdf) as pdf:
 
         for metric in scenario1.metrics :
@@ -624,11 +625,12 @@ def launcher(obs_json_fn, model , out ) :
                 bar_plot(scenario1 , observed , output_path , pdf, model , metric, year_range)
                 compare_metric(scenario1 , observed , output_path , pdf, model , metric, year_range , cumsum=False)
 
+                
             else : pass
 
-            compare_vegcounts(scenario1  , observed , output_path , pdf, model , 'veg_counts', year_range)
-            CD_ratio(scenario1 , observed , output_path , pdf, model , 'veg_counts', year_range)
-            compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , 'all_fire_sizes', year_range )
-            compare_metric(scenario1 , observed , output_path , pdf, model , 'total_area_burned', year_range , cumsum=True)
+        compare_vegcounts(scenario1  , observed , output_path , pdf, model , 'veg_counts', year_range)
+        CD_ratio(scenario1 , observed , output_path , pdf, model , 'veg_counts', year_range)
+        compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , 'all_fire_sizes', year_range )
+        compare_metric(scenario1 , observed , output_path , pdf, model , 'total_area_burned', year_range , cumsum=True)
 
 
