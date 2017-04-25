@@ -188,8 +188,11 @@ def aab_barplot_factory( modplot, obsplot, output_path, replicate, year_range=(1
 	begin, end = year_range
 	years = [ str(i) for i in range( begin, end+1 ) ]
 
-	for domain in modplot.domains: # using modeled domains, must be same in obs_dict
-		mod = mod_dict[ domain ].loc[ years, str(replicate) ]
+	for domain in modplot.domains: # using modeled domains, must be same in obs_dict]
+		if replicate == None :
+			mod = mod_dict[ domain ].loc[ years, ].mean( axis=1 )
+		else :
+			mod = mod_dict[ domain ].loc[ years, str(replicate) ]
 		mod.name = 'modeled'
 		obs = obs_dict[ domain ].loc[ years, 'observed' ]
 		_ = ap.aab_barplot( mod, obs, output_path, domain, replicate, modplot.model, modplot.scenario, year_range, *args, **kwargs )
