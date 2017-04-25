@@ -620,16 +620,13 @@ def launcher(obs_json_fn, model , out ) :
             if metric not in [ 'veg_counts' , 'all_fire_sizes']:
                 print metric
                 decade_plot(scenario1 , observed , output_path , pdf, model , metric, year_range)
-                print "done with decade"
                 Alec_boxplot(scenario1 , observed , output_path , pdf, model , metric, year_range)
-                print 'done with alec plot'
                 bar_plot(scenario1 , observed , output_path , pdf, model , metric, year_range)
-                print 'done with bar plot'
                 compare_metric(scenario1 , observed , output_path , pdf, model , metric, year_range , cumsum=False)
-                print 'done with compare metric'
+
 
             else : pass
-        print 'Done with metrics'
+
         compare_vegcounts(scenario1  , observed , output_path , pdf, model , 'veg_counts', year_range)
         CD_ratio(scenario1 , observed , output_path , pdf, model , 'veg_counts', year_range)
         compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , 'all_fire_sizes', year_range )
