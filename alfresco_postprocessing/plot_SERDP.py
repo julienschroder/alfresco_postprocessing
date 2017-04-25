@@ -13,6 +13,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib import rcParams
 pd.options.mode.chained_assignment = None  # default='warn'
 import alfresco_postprocessing as ap
+import seaborn.apionly as sns
 
 rcParams[ 'xtick.direction' ] = 'out'
 rcParams[ 'ytick.direction' ] = 'out'
@@ -222,15 +223,15 @@ def Alec_boxplot(scenario1 , observed , output_path , pdf, model , graph_variabl
         begin, end = year_range 
 
         if graph_variable == 'avg_fire_size' :
-            plot_title = 'Average Size of Fire %d-%d \n ALFRESCO, %s, %s, %s Domain' % ( begin, end, scenario1.model,scenario1.mscenario,domain )
+            plot_title = 'Average Size of Fire %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
             ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
 
         elif graph_variable == 'number_of_fires' :
-            plot_title = 'Total Number of Fires %d-%d \n ALFRESCO, %s, %s, %s Domain' % ( begin, end, scenario1.model,scenario1.mscenario,domain )
+            plot_title = 'Total Number of Fires %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
             ylabel = 'Number of Fires'
 
         elif graph_variable == 'total_area_burned' :
-            plot_title = 'Total Area Burned %d-%d \n ALFRESCO, %s, %s, %s Domain' % ( begin, end, scenario1.model,scenario1.mscenario,domain )
+            plot_title = 'Total Area Burned %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
             ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
 
         else : 'Error with Title'
@@ -294,7 +295,7 @@ def decade_plot(scenario1 , observed , output_path , pdf, model , graph_variable
             return df
 
         # Handling the historical, oserved data
-        obs_domain = observed.__dict__[graph_variable][domain].ix[begin : 2009]
+        obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
         obs_domain['std'] = 0
 
         # Building the two dataframes needed for the plotting
@@ -346,7 +347,7 @@ def bar_plot(scenario1 , observed , output_path , pdf, model , graph_variable, y
             return df
 
         #Handling the historical, oserved data
-        obs_domain = observed.__dict__[graph_variable][domain].ix[begin : 2009]
+        obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
 
         data = {scen_arg.scenario :std_calc(scen_arg.__dict__[graph_variable][domain].ix[begin : end]) for scen_arg in [scenario1]}
 
@@ -358,7 +359,7 @@ def bar_plot(scenario1 , observed , output_path , pdf, model , graph_variable, y
         errors = df['std']
         errors['obs'] = 0
         means = df['value']
-        # means['obs'] = observed.__dict__[graph_variable][domain].ix[begin : 2009]
+        # means['obs'] = observed.__dict__[graph_variable][domain].ix[begin : ]
 
         #plotting
         ax = means.plot(kind='bar',yerr= errors.values.T, error_kw={'ecolor':'grey','linewidth':0.2},legend=False, color = [scenario1.color ], title=plot_title,  grid=False )
@@ -390,9 +391,9 @@ def compare_area_burned(scenario1 , observed , output_path , pdf, model , graph_
 
         #Handling the historical, oserved data
         if cumsum == True :
-            obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : 2009] )
+            obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : ] )
         else : 
-            obs_domain = observed.__dict__[graph_variable][domain].ix[begin : 2009]
+            obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
 
         data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
 
@@ -437,9 +438,9 @@ def compare_metric(scenario1 , observed , output_path , pdf, model , graph_varia
 
         #Handling the historical, oserved data
         if cumsum == True :
-            obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : 2009] )
+            obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : ] )
         else : 
-            obs_domain = observed.__dict__[graph_variable][domain].ix[begin : 2009]
+            obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
 
         data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
 
@@ -497,7 +498,7 @@ def compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , graph_va
 
 
         wrangling(scenario1.__dict__[graph_variable][domain].ix[begin : end] , scenario1.color ,'scenario1')
-        wrangling(observed.__dict__[graph_variable][domain].ix[begin : 2009], observed.color , 'observed')
+        wrangling(observed.__dict__[graph_variable][domain].ix[begin : ], observed.color , 'observed')
 
         ax = ticks(ax)
 
@@ -590,11 +591,14 @@ def launcher(obs_json_fn, model , out ) :
 
     json = os.path.join(out , 'JSON' , model + '.json' )
     json_obs = os.path.join( obs_json_fn )
-
+    print model
+    print out
+    print json
+    print json_obs
     scenario1 = Scenario( json, model, 'scenario1', model , '#000000')
     observed = Scenario( json_obs, model, 'Observed', "Historical", '#B22222' )
 
-    visual = os.path.join( out , 'Plots_Julien' )
+    visual = os.path.join( out , 'Plots_Julien_TBS' )
     if not os.path.exists( visual ):
         os.mkdir( visual )
 
@@ -608,23 +612,24 @@ def launcher(obs_json_fn, model , out ) :
         if not os.path.exists( _tmp ) :
             os.makedirs( _tmp )
 
-
-
     pdf = os.path.join( visual, '_'.join([ model,'plots']) + '.pdf' )
-    
-    #might want to get ride of that if a huge amounts of domains are to be processed...
+
     with PdfPages(pdf) as pdf:
 
         for metric in scenario1.metrics :
             if metric not in [ 'veg_counts' , 'all_fire_sizes']:
+                print metric
                 decade_plot(scenario1 , observed , output_path , pdf, model , metric, year_range)
+                print "done with decade"
                 Alec_boxplot(scenario1 , observed , output_path , pdf, model , metric, year_range)
+                print 'done with alec plot'
                 bar_plot(scenario1 , observed , output_path , pdf, model , metric, year_range)
+                print 'done with bar plot'
                 compare_metric(scenario1 , observed , output_path , pdf, model , metric, year_range , cumsum=False)
+                print 'done with compare metric'
 
-                
             else : pass
-
+        print 'Done with metrics'
         compare_vegcounts(scenario1  , observed , output_path , pdf, model , 'veg_counts', year_range)
         CD_ratio(scenario1 , observed , output_path , pdf, model , 'veg_counts', year_range)
         compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , 'all_fire_sizes', year_range )
