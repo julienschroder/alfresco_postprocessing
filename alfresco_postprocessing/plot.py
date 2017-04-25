@@ -149,9 +149,9 @@ def aab_barplot( modeled_rep, observed, output_path, domain, replicate, model, s
 	df = pd.concat( [observed, modeled_rep], axis=1 )
 	sns.set_style( 'whitegrid', {'ytick.major.size': 7, 'xtick.major.size': 7} )
 	my_colors = [ 'black', 'firebrick' ]
-	
-	plot_title = 'ALFRESCO Annual Area Burned 1950-2010 \n %s - Replicate %s' \
-			% ( domain, replicate )
+	begin, end = year_range
+	plot_title = 'ALFRESCO Annual Area Burned %d-%d \n %s - Replicate %s' \
+			% ( begin, end, domain, replicate )
 	
 	figsize = ( 11, 8 )
 	barwidth = 0.7
@@ -170,7 +170,7 @@ def aab_barplot( modeled_rep, observed, output_path, domain, replicate, model, s
 	ax.set_ylabel( 'Area Burned (' + '$\mathregular{km^2}$' + ')' )
 	sns.despine( )
 
-	begin, end = year_range
+
 	domain = domain.replace(' ', '')
 	output_filename = os.path.join( output_path, '_'.join([ 'alfresco_annual_areaburned_bar', 'observed', \
 											scenario, domain.replace(' ', ''), str(begin), str(end) ]) + '.png' )
