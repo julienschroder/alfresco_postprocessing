@@ -150,7 +150,11 @@ def aab_barplot( modeled_rep, observed, output_path, domain, replicate, model, s
 	sns.set_style( 'whitegrid', {'ytick.major.size': 7, 'xtick.major.size': 7} )
 	my_colors = [ 'black', 'firebrick' ]
 	begin, end = year_range
-	plot_title = 'ALFRESCO Annual Area Burned %d-%d \n %s - Replicate %s' \
+	if replicate == None :
+		plot_title = 'ALFRESCO Annual Area Burned %d-%d \n %s - Average replicate' \
+		% ( begin, end, domain, replicate )
+	else :
+		plot_title = 'ALFRESCO Annual Area Burned %d-%d \n %s - Replicate %s' \
 			% ( begin, end, domain, replicate )
 	
 	figsize = ( 11, 8 )
@@ -173,7 +177,7 @@ def aab_barplot( modeled_rep, observed, output_path, domain, replicate, model, s
 
 	domain = domain.replace(' ', '')
 	output_filename = os.path.join( output_path, '_'.join([ 'alfresco_annual_areaburned_bar', 'observed', \
-											scenario, domain.replace(' ', ''), str(begin), str(end) ]) + '.png' )
+											model, scenario, domain.replace(' ', ''), str(begin), str(end) ]) + '.png' )
 	plt.savefig( output_filename )
 	plt.close()
 	return output_filename
