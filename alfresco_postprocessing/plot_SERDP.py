@@ -590,10 +590,7 @@ def launcher(obs_json_fn, model , out ) :
 
     json = os.path.join(out , 'JSON' , model + '.json' )
     json_obs = os.path.join( obs_json_fn )
-    print model
-    print out
-    print json
-    print json_obs
+
     scenario1 = Scenario( json, model, 'scenario1', model , '#000000')
     observed = Scenario( json_obs, model, 'Observed', "Historical", '#B22222' )
 
