@@ -101,7 +101,7 @@ ap.aab_barplot_factory( modplot, obsplot, output_path, replicate, year_range=(19
 ap.vegcounts_lineplot_factory( modplot, output_path, replicate, year_range=(1950, 2100))
 
 # annual area burned lineplots
-ap.aab_lineplot_factory( modplot, obsplot, output_path, model, scenario, replicates=[None], year_range=(1950, 2100) )
+ap.aab_lineplot_factory( modplot, obsplot, output_path, replicates=[None], year_range=(1950, 2100) )
 
 ```
 the new `Plot` object generated above named `pp` contains a [TinyDB](https://tinydb.readthedocs.org/en/latest/) database as an attribute `db`, which sorts the data in a JSON file on disk, but allows for simple querying if desired by the end user.  Currently, we are using this internally as a simple and straightforward way to store the output data as json records which minimizes somewhat painful nesting utilized in older versions.
