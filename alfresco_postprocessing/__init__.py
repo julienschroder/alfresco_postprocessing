@@ -7,6 +7,7 @@ from alfresco_postprocessing.dataset import *
 from alfresco_postprocessing.metrics import *
 from alfresco_postprocessing.postprocess import *
 from alfresco_postprocessing.plot import *
+from alfresco_postprocessing.plot_SERDP import *
 import alfresco_postprocessing as ap
 
 # other libs (external and stdlib)
