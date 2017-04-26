@@ -5,7 +5,6 @@
 import pandas as pd
 import numpy as np
 import glob, os, ast, sys,argparse
-import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -584,7 +583,7 @@ def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, y
         pass
 
 
-def launcher(obs_json_fn, model , out ) :
+def launcher_SERDP(obs_json_fn, model , out ) :
 
     from collections import defaultdict
 
