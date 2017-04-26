@@ -1,3 +1,6 @@
+#Need to fix a bunch of things, is there a way to make this multiprocessing?
+#Need to fix late reference to scenario1 from SERDP and hopefully build a way to add other models
+
 
 import pandas as pd
 import numpy as np
@@ -8,12 +11,12 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
-# from alfresco_postprocessing import plot
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib import rcParams
 pd.options.mode.chained_assignment = None  # default='warn'
 import alfresco_postprocessing as ap
 import seaborn.apionly as sns
+
 
 rcParams[ 'xtick.direction' ] = 'out'
 rcParams[ 'ytick.direction' ] = 'out'
@@ -216,368 +219,328 @@ def ticks(ax , decade=False) :
 
     return ax
 
-def Alec_boxplot(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , *args):
+def Alec_boxplot(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , *args):
 
-    for domain in scenario1.domains :
 
-        begin, end = year_range 
+    begin, end = year_range 
 
-        if graph_variable == 'avg_fire_size' :
-            plot_title = 'Average Size of Fire %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-            ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
+    if graph_variable == 'avg_fire_size' :
+        plot_title = 'Average Size of Fire %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+        ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
 
-        elif graph_variable == 'number_of_fires' :
-            plot_title = 'Total Number of Fires %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-            ylabel = 'Number of Fires'
+    elif graph_variable == 'number_of_fires' :
+        plot_title = 'Total Number of Fires %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+        ylabel = 'Number of Fires'
 
-        elif graph_variable == 'total_area_burned' :
-            plot_title = 'Total Area Burned %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-            ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
+    elif graph_variable == 'total_area_burned' :
+        plot_title = 'Total Area Burned %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+        ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
 
-        else : 'Error with Title'
+    else : 'Error with Title'
 
-        data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
+    data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
 
-        df = df_processing(data)
+    df = df_processing(data)
 
-        ax = df.boxplot(by='date' , rot = 90 , grid=False )
+    ax = df.boxplot(by='date' , rot = 90 , grid=False )
 
-        ax = ticks(ax)
-        #get ride of the automatic title
-        fig = ax.get_figure()
-        fig.suptitle('')
-        plt.title(plot_title)
+    ax = ticks(ax)
+    #get ride of the automatic title
+    fig = ax.get_figure()
+    fig.suptitle('')
+    plt.title(plot_title)
 
-        plt.xlabel( 'Years' )
+    plt.xlabel( 'Years' )
 
-        if graph_variable == 'total_area_burned' :
-            plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')'  )
-        elif graph_variable == 'avg_fire_size' :
-            plt.ylabel( 'Average size in ('+'$\mathregular{km^2}$' + ')'  )
-        elif graph_variable == 'number_of_fires' :
-            plt.ylabel( 'Number of fires'  )
+    if graph_variable == 'total_area_burned' :
+        plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')'  )
+    elif graph_variable == 'avg_fire_size' :
+        plt.ylabel( 'Average size in ('+'$\mathregular{km^2}$' + ')'  )
+    elif graph_variable == 'number_of_fires' :
+        plt.ylabel( 'Number of fires'  )
 
-        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_boxplot', domain,graph_variable, model , str(begin), str(end)]) + '.png' )
+    output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_boxplot', domain,graph_variable, model , str(begin), str(end)]) + '.png' )
 
-        plt.savefig( output_filename )
-        pdf.savefig()
-        plt.close()
+    plt.savefig( output_filename )
+    pdf.savefig()
+    plt.close()
 
-def decade_plot(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , *args):
+def decade_plot(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , *args):
     """  Takes a graphvariable/metric and create a bar plot by decade. The error values are calculated by calculating the variance amoung each reps
     for every year, then the error is calculated by taking the square root of the mean of those variance as shown here
     http://stats.stackexchange.com/questions/25848/how-to-sum-a-standard-deviation#26647"""
 
-    for domain in scenario1.domains :
 
-        begin, end = year_range 
-        end = end-1
+    begin, end = year_range 
+    end = end-1
 
-        if graph_variable == 'avg_fire_size' :
-            plot_title = 'Average Size of Fire Summed per Decade %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-            ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
+    if graph_variable == 'avg_fire_size' :
+        plot_title = 'Average Size of Fire Summed per Decade %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+        ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
 
-        elif graph_variable == 'number_of_fires' :
-            plot_title = 'Total Number of Fires per Decade %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-            ylabel = 'Number of Fires'
+    elif graph_variable == 'number_of_fires' :
+        plot_title = 'Total Number of Fires per Decade %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+        ylabel = 'Number of Fires'
 
-        elif graph_variable == 'total_area_burned' :
-            plot_title = 'Total Area Burned %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-            ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
+    elif graph_variable == 'total_area_burned' :
+        plot_title = 'Total Area Burned %d-%d \n ALFRESCO, %s, %s, %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+        ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
 
-        else : 'Error with Title'
+    else : 'Error with Title'
 
-        def std_calc(df):
-            mean = df.mean(axis=1).groupby(df.index // 10 * 10).sum()
-            error = df.var(axis=1).groupby(df.index // 10 * 10).apply(lambda d: np.sqrt(d.mean()))
-            df = pd.concat([mean,error],axis=1)
-            df.columns = ['mean','error']
-            return df
+    def std_calc(df):
+        mean = df.mean(axis=1).groupby(df.index // 10 * 10).sum()
+        error = df.var(axis=1).groupby(df.index // 10 * 10).apply(lambda d: np.sqrt(d.mean()))
+        df = pd.concat([mean,error],axis=1)
+        df.columns = ['mean','error']
+        return df
 
-        # Handling the historical, oserved data
-        obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
-        obs_domain['std'] = 0
+    # Handling the historical, oserved data
+    obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
+    obs_domain['std'] = 0
 
-        # Building the two dataframes needed for the plotting
-        data = {scen_arg.scenario :std_calc(scen_arg.__dict__[graph_variable][domain].ix[begin : end]) for scen_arg in [scenario1]}
-        means = pd.concat([data['scenario1']['mean'],obs_domain['observed'].groupby(obs_domain.index // 10 * 10).sum()],axis=1)
-        error = pd.concat([data['scenario1']['error'],obs_domain['std'].groupby(obs_domain.index // 10 * 10).sum()],axis=1)
+    # Building the two dataframes needed for the plotting
+    data = {scen_arg.scenario :std_calc(scen_arg.__dict__[graph_variable][domain].ix[begin : end]) for scen_arg in [scenario1]}
+    means = pd.concat([data['scenario1']['mean'],obs_domain['observed'].groupby(obs_domain.index // 10 * 10).sum()],axis=1)
+    error = pd.concat([data['scenario1']['error'],obs_domain['std'].groupby(obs_domain.index // 10 * 10).sum()],axis=1)
 
 
-        #plotting
-        ax = means.plot(kind='bar',yerr= error.values.T, error_kw={'ecolor':'grey','linewidth':1},legend=False, color = [scenario1.color , observed.color], title=plot_title,  grid=False, width=0.8 )
+    #plotting
+    ax = means.plot(kind='bar',yerr= error.values.T, error_kw={'ecolor':'grey','linewidth':1},legend=False, color = [scenario1.color , observed.color], title=plot_title,  grid=False, width=0.8 )
 
-        #Create label for axis
-        plt.ylabel( ylabel )
-        plt.xlabel( 'Decade' )
-        plt.ylim(ymin=0 ) 
+    #Create label for axis
+    plt.ylabel( ylabel )
+    plt.xlabel( 'Decade' )
+    plt.ylim(ymin=0 ) 
 
-        ax = ticks(ax , decade = True)
-        
-        plt.legend(handles = [ scenario1.patch , observed.patch],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+    ax = ticks(ax , decade = True)
+    
+    plt.legend(handles = [ scenario1.patch , observed.patch],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
-        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_barplot_decade', domain,graph_variable, model , str(begin), str(end)]) + '.png' )
+    output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_barplot_decade', domain,graph_variable, model , str(begin), str(end)]) + '.png' )
 
-        plt.savefig( output_filename )
-        pdf.savefig()
-        plt.close()
+    plt.savefig( output_filename )
+    pdf.savefig()
+    plt.close()
 
-def bar_plot(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , *args):
+def bar_plot(scenario1 , observed , output_path , pdf, model , graph_variable,year_range , domain , *args):
     # take a graphvariable, average over reps for a year and sums it over a decade.
 
-    for domain in scenario1.domains :
 
-        begin, end = year_range 
-        end = end-1
-        plot_title = '%s %d-%d \n ALFRESCO, %s, %s, %s' % (upcase(graph_variable), begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
 
-        if graph_variable == 'avg_fire_size' :
-            ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
+    begin, end = year_range 
+    end = end-1
+    plot_title = '%s %d-%d \n ALFRESCO, %s, %s, %s' % (upcase(graph_variable), begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
 
-        elif graph_variable == 'number_of_fires' :
-            ylabel = 'Number of Fires'
+    if graph_variable == 'avg_fire_size' :
+        ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
 
-        elif graph_variable == 'total_area_burned' :
-            ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
+    elif graph_variable == 'number_of_fires' :
+        ylabel = 'Number of Fires'
 
-        else : 'Error with Title'
+    elif graph_variable == 'total_area_burned' :
+        ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
 
-        def std_calc(df):
-            df['std'] = df.std(axis=1)
-            return df
+    else : 'Error with Title'
 
-        #Handling the historical, oserved data
+    def std_calc(df):
+        df['std'] = df.std(axis=1)
+        return df
+
+    #Handling the historical, oserved data
+    obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
+
+    data = {scen_arg.scenario :std_calc(scen_arg.__dict__[graph_variable][domain].ix[begin : end]) for scen_arg in [scenario1]}
+
+    df = df_processing(data , std_arg = True)
+
+    df = df.groupby(["condition", "date"]).mean().unstack("condition")
+
+    #help to create those as the yerr is pretty sensitive to changes, had to create a 0 columns for std.
+    errors = df['std']
+    errors['obs'] = 0
+    means = df['value']
+    # means['obs'] = observed.__dict__[graph_variable][domain].ix[begin : ]
+
+    #plotting
+    ax = means.plot(kind='bar',yerr= errors.values.T, error_kw={'ecolor':'grey','linewidth':0.2},legend=False, color = [scenario1.color ], title=plot_title,  grid=False )
+
+    #Create label for axis
+    plt.ylabel( ylabel )
+    plt.xlabel( 'Year' )
+    plt.ylim(ymin=0 ) 
+
+    ax = ticks(ax)
+    
+    plt.legend(handles = [ scenario1.patch],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+
+    output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_indiv_bar', domain,graph_variable, model , str(begin), str(end)]) + '.png' )
+
+    plt.savefig( output_filename )
+    pdf.savefig()
+    plt.close()
+
+def compare_area_burned(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , cumsum=True , *args):
+    #This plot compare the cumulative area burn for managed, unmanaged and historical period
+
+
+    begin, end = year_range
+
+    #Set some Style and settings for the plots
+    plot_title = 'Cumulative Sum of Annual Area Burned %d-%d \n ALFRESCO, %s, %s, %s' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+
+    #Handling the historical, oserved data
+    if cumsum == True :
+        obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : ] )
+    else : 
         obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
 
-        data = {scen_arg.scenario :std_calc(scen_arg.__dict__[graph_variable][domain].ix[begin : end]) for scen_arg in [scenario1]}
+    data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
 
-        df = df_processing(data , std_arg = True)
+    df = df_processing2(data , cumsum_arg = cumsum)
 
-        df = df.groupby(["condition", "date"]).mean().unstack("condition")
+    #checking if colors_list list work
+    ax = df.plot( legend=False, color=['0.75'],  grid=False )
+    df.mean(axis=1).plot(ax=ax , legend=False, color = scenario1.color, title=plot_title,lw = 1,  grid=False)
+    obs_domain.plot( ax=ax,legend=False, color=observed.color, grid=False, label= "observed" ,lw = 1)
 
-        #help to create those as the yerr is pretty sensitive to changes, had to create a 0 columns for std.
-        errors = df['std']
-        errors['obs'] = 0
-        means = df['value']
-        # means['obs'] = observed.__dict__[graph_variable][domain].ix[begin : ]
+    #Create label for axis
+    plt.xlabel( 'Year' )
+    plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')' )
 
-        #plotting
-        ax = means.plot(kind='bar',yerr= errors.values.T, error_kw={'ecolor':'grey','linewidth':0.2},legend=False, color = [scenario1.color ], title=plot_title,  grid=False )
+    ax = ticks(ax , decade=True)
 
-        #Create label for axis
-        plt.ylabel( ylabel )
-        plt.xlabel( 'Year' )
-        plt.ylim(ymin=0 ) 
+    #have to pass the scenario object so they are avalaible for color definition
+    replicate = mlines.Line2D([], [], linewidth=1.2, color='0.75', label= 'Replicates' )
+    plt.legend(handles = [ scenario1.line , observed.line, replicate],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
-        ax = ticks(ax)
-        
-        plt.legend(handles = [ scenario1.patch],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+    if cumsum == True :
+        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_cumsum',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
+    else : 
+        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_annual',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
 
-        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_indiv_bar', domain,graph_variable, model , str(begin), str(end)]) + '.png' )
+    plt.savefig( output_filename )
+    pdf.savefig()
+    plt.close()
 
-        plt.savefig( output_filename )
-        pdf.savefig()
-        plt.close()
-
-def compare_area_burned(scenario1 , observed , output_path , pdf, model , graph_variable, year_range, cumsum=True , *args):
+def compare_metric(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , cumsum=True , *args):
     #This plot compare the cumulative area burn for managed, unmanaged and historical period
 
-    for domain in scenario1.domains :
 
-        begin, end = year_range
+    begin, end = year_range
 
-        #Set some Style and settings for the plots
-        plot_title = 'Cumulative Sum of Annual Area Burned %d-%d \n ALFRESCO, %s, %s, %s' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+    #Set some Style and settings for the plots
+    if cumsum == True :
+        plot_title = 'ALFRESCO Cumulative Sum of %s %d-%d \n %s - %s \n %s' % (upcase(graph_variable) , begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+    else :
+        plot_title = 'ALFRESCO Annual %s %d-%d \n %s - %s \n %s' % (upcase(graph_variable), begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
 
-        #Handling the historical, oserved data
-        if cumsum == True :
-            obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : ] )
-        else : 
-            obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
+    #Handling the historical, oserved data
+    if cumsum == True :
+        obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : ] )
+    else : 
+        obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
 
-        data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
+    data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
 
-        df = df_processing2(data , cumsum_arg = cumsum)
+    df = df_processing2(data , cumsum_arg = cumsum)
 
-        #checking if colors_list list work
-        ax = df.plot( legend=False, color=['0.75'],  grid=False )
-        df.mean(axis=1).plot(ax=ax , legend=False, color = scenario1.color, title=plot_title,lw = 1,  grid=False)
-        obs_domain.plot( ax=ax,legend=False, color=observed.color, grid=False, label= "observed" ,lw = 1)
+    #checking if colors_list list work
+    ax = df.plot( legend=False, color=['0.75'],  grid=False )
+    df.mean(axis=1).plot(ax=ax , legend=False, color = scenario1.color, title=plot_title,lw = 1,  grid=False)
+    obs_domain.plot( ax=ax,legend=False, color=observed.color, grid=False, label= "observed" ,lw = 1)
 
-        #Create label for axis
-        plt.xlabel( 'Year' )
-        plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')' )
+    #Create label for axis
+    plt.xlabel( 'Year' )
+    plt.ylabel( 'Area burned ('+'$\mathregular{km^2}$' + ')' )
 
-        ax = ticks(ax , decade=True)
+    ax = ticks(ax , decade=True)
 
-        #have to pass the scenario object so they are avalaible for color definition
-        replicate = mlines.Line2D([], [], linewidth=1.2, color='0.75', label= 'Replicates' )
-        plt.legend(handles = [ scenario1.line , observed.line, replicate],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+    #have to pass the scenario object so they are avalaible for color definition
+    replicate = mlines.Line2D([], [], linewidth=1.2, color='0.75', label= 'Replicates' )
+    plt.legend(handles = [ scenario1.line , observed.line, replicate],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
-        if cumsum == True :
-            output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_cumsum',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
-        else : 
-            output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_annual',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
+    if cumsum == True :
+        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_cumsum',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
+    else : 
+        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_annual',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
 
-        plt.savefig( output_filename )
-        pdf.savefig()
-        plt.close()
+    plt.savefig( output_filename )
+    pdf.savefig()
+    plt.close()
 
-def compare_metric(scenario1 , observed , output_path , pdf, model , graph_variable, year_range, cumsum=True , *args):
-    #This plot compare the cumulative area burn for managed, unmanaged and historical period
-
-    for domain in scenario1.domains :
-
-        begin, end = year_range
-
-        #Set some Style and settings for the plots
-        if cumsum == True :
-            plot_title = 'ALFRESCO Cumulative Sum of %s %d-%d \n %s - %s \n %s' % (upcase(graph_variable) , begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-        else :
-            plot_title = 'ALFRESCO Annual %s %d-%d \n %s - %s \n %s' % (upcase(graph_variable), begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-
-        #Handling the historical, oserved data
-        if cumsum == True :
-            obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : ] )
-        else : 
-            obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
-
-        data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
-
-        df = df_processing2(data , cumsum_arg = cumsum)
-
-        #checking if colors_list list work
-        ax = df.plot( legend=False, color=['0.75'],  grid=False )
-        df.mean(axis=1).plot(ax=ax , legend=False, color = scenario1.color, title=plot_title,lw = 1,  grid=False)
-        obs_domain.plot( ax=ax,legend=False, color=observed.color, grid=False, label= "observed" ,lw = 1)
-
-        #Create label for axis
-        plt.xlabel( 'Year' )
-        plt.ylabel( 'Area burned ('+'$\mathregular{km^2}$' + ')' )
-
-        ax = ticks(ax , decade=True)
-
-        #have to pass the scenario object so they are avalaible for color definition
-        replicate = mlines.Line2D([], [], linewidth=1.2, color='0.75', label= 'Replicates' )
-        plt.legend(handles = [ scenario1.line , observed.line, replicate],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
-
-        if cumsum == True :
-            output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_cumsum',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
-        else : 
-            output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_annual',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
-
-        plt.savefig( output_filename )
-        pdf.savefig()
-        plt.close()
-
-def compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , *args):
+def compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , *args):
     #This graph shows the cumulative area burnt by fire size, managed and unmanaged scenario are compared on the same plot
     #Mainly based on Michael's code https://github.com/ua-snap/alfresco-calibration/blob/cavm/alfresco_postprocessing_plotting.py#L252
     
     begin, end = year_range
 
-    for domain in scenario1.domains :
-        fig, ax = plt.subplots() 
+    fig, ax = plt.subplots() 
 
-        def wrangling(df , color , scenario):
-            if scenario!= 'observed' :
+    def wrangling(df , color , scenario):
+        if scenario!= 'observed' :
 
-                df_list = []
-                for col in df.columns[1:]:
-                    mod_sorted = sorted( [ j for i in df[ col ].astype(str) for j in ast.literal_eval(i) ] )
-                    mod_cumsum = np.cumsum( mod_sorted )
-                    replicate = [ col for i in range( len( mod_sorted ) ) ]
-                    df_list.append( pd.DataFrame( {'mod_sorted':mod_sorted, 'mod_cumsum':mod_cumsum, 'replicate':replicate} ) )
-                mod_melted = pd.concat( df_list )   
-                mod_melted.groupby( 'replicate' ).apply( lambda x: plt.plot( x['mod_sorted'], x['mod_cumsum'], color=color, alpha=0.5, lw=1) )
-
-            else :
-                mod_sorted = sorted( [ j for i in df[df.columns[0]].astype(str) for j in ast.literal_eval(i) ] )
+            df_list = []
+            for col in df.columns[1:]:
+                mod_sorted = sorted( [ j for i in df[ col ].astype(str) for j in ast.literal_eval(i) ] )
                 mod_cumsum = np.cumsum( mod_sorted )
-                plt.plot( mod_sorted, mod_cumsum, color=color, alpha=0.5, lw=1)
+                replicate = [ col for i in range( len( mod_sorted ) ) ]
+                df_list.append( pd.DataFrame( {'mod_sorted':mod_sorted, 'mod_cumsum':mod_cumsum, 'replicate':replicate} ) )
+            mod_melted = pd.concat( df_list )   
+            mod_melted.groupby( 'replicate' ).apply( lambda x: plt.plot( x['mod_sorted'], x['mod_cumsum'], color=color, alpha=0.5, lw=1) )
+
+        else :
+            mod_sorted = sorted( [ j for i in df[df.columns[0]].astype(str) for j in ast.literal_eval(i) ] )
+            mod_cumsum = np.cumsum( mod_sorted )
+            plt.plot( mod_sorted, mod_cumsum, color=color, alpha=0.5, lw=1)
 
 
-        wrangling(scenario1.__dict__[graph_variable][domain].ix[begin : end] , scenario1.color ,'scenario1')
-        wrangling(observed.__dict__[graph_variable][domain].ix[begin : ], observed.color , 'observed')
+    wrangling(scenario1.__dict__[graph_variable][domain].ix[begin : end] , scenario1.color ,'scenario1')
+    wrangling(observed.__dict__[graph_variable][domain].ix[begin : ], observed.color , 'observed')
 
-        ax = ticks(ax)
+    ax = ticks(ax)
 
-        #Create label for axis
-        plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')' )
-        plt.xlabel( 'Fire size ('+'$\mathregular{km^2}$' + ')' )
+    #Create label for axis
+    plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')' )
+    plt.xlabel( 'Fire size ('+'$\mathregular{km^2}$' + ')' )
 
-        fig.suptitle('Cumulative Area Burned vs. Fire Sizes %d-%d \n ALFRESCO, %s, %s, %s' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) ))
-    
-        plt.legend(handles = [ scenario1.line , observed.line ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+    fig.suptitle('Cumulative Area Burned vs. Fire Sizes %d-%d \n ALFRESCO, %s, %s, %s' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) ))
 
-        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_cab_vs_fs',domain, model , str(begin), str(end)]) + '.png' )
+    plt.legend(handles = [ scenario1.line , observed.line ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
-        plt.savefig( output_filename )
-        pdf.savefig()
-        plt.close()
+    output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_cab_vs_fs',domain, model , str(begin), str(end)]) + '.png' )
 
-def compare_vegcounts(scenario1  , observed , output_path , pdf, model , graph_variable, year_range , *args):
+    plt.savefig( output_filename )
+    pdf.savefig()
+    plt.close()
 
-    for domain in scenario1.domains :
-        begin, end = year_range #subset the dataframes to the years of interest
-
-        for veg_name in scenario1.veg_counts[domain].keys():
-            try :
-                plot_title = "ALFRESCO Vegetation Annual %s Cover area %s-%s \n %s - %s \n %s" \
-                    % ( veg_name, str(begin), str(end),scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-
-                data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain][veg_name].ix[begin : end] for scen_arg in [scenario1]}
-
-                df =df_processing2(data)
-                # Plot the average value by condition and date
-                ax = df.mean(axis=1).plot(legend=False, color = scenario1.color, title=plot_title,lw = 0.7,  grid=False )
-
-                ax = ticks(ax , decade=True)
-                
-                #Create label for axis
-                plt.xlabel( 'Year' )
-                plt.ylabel( 'Area Covered ('+'$\mathregular{km^2}$' + ')' )
-
-                fill_in(ax , df , scenario1.color ,low_percentile = 5 , high_percentile = 95)
-
-                plt.legend(handles = [ scenario1.line ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
-
-                output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_annual_areaveg_line',model, domain, veg_name.replace(' ', '' ), str(begin), str(end) ]) + '.png' ) 
-
-                plt.savefig( output_filename )
-                pdf.savefig()
-                plt.close()
-            except :
-                pass
+def compare_vegcounts(scenario1  , observed , output_path , pdf, model , graph_variable,year_range , domain , *args):
 
 
-def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , *args):
+    begin, end = year_range #subset the dataframes to the years of interest
 
-    begin, end = year_range
-
-    for domain in scenario1.domains :
+    for veg_name in scenario1.veg_counts[domain].keys():
         try :
-            plot_title = 'ALFRESCO Conifer:Deciduous Ratios %d-%d \n %s - %s \n %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+            plot_title = "ALFRESCO Vegetation Annual %s Cover area %s-%s \n %s - %s \n %s" \
+                % ( veg_name, str(begin), str(end),scenario1.model,scenario1.mscenario,underscore_fix(domain) )
 
+            data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain][veg_name].ix[begin : end] for scen_arg in [scenario1]}
 
-            data = {scen_arg.scenario : get_veg_ratios( scen_arg.__dict__[graph_variable], domain ) for scen_arg in [scenario1] }
-
-
-            df =df_processing2( data )  
+            df =df_processing2(data)
+            # Plot the average value by condition and date
             ax = df.mean(axis=1).plot(legend=False, color = scenario1.color, title=plot_title,lw = 0.7,  grid=False )
 
-            ax = ticks(ax, decade=True)
+            ax = ticks(ax , decade=True)
             
             #Create label for axis
             plt.xlabel( 'Year' )
-            plt.ylabel( 'C:D Ratio' )
+            plt.ylabel( 'Area Covered ('+'$\mathregular{km^2}$' + ')' )
 
             fill_in(ax , df , scenario1.color ,low_percentile = 5 , high_percentile = 95)
 
             plt.legend(handles = [ scenario1.line ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
-
-            output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_CD_ratio',domain, model, str(begin), str(end) ]) + '.png' ) 
+            output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_annual_areaveg_line',model, domain, veg_name.replace(' ', '' ), str(begin), str(end) ]) + '.png' ) 
 
             plt.savefig( output_filename )
             pdf.savefig()
@@ -585,20 +548,54 @@ def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, y
         except :
             pass
 
+
+def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , *args):
+
+    begin, end = year_range
+
+
+    try :
+        plot_title = 'ALFRESCO Conifer:Deciduous Ratios %d-%d \n %s - %s \n %s ' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
+
+
+        data = {scen_arg.scenario : get_veg_ratios( scen_arg.__dict__[graph_variable], domain ) for scen_arg in [scenario1] }
+
+
+        df =df_processing2( data )  
+        ax = df.mean(axis=1).plot(legend=False, color = scenario1.color, title=plot_title,lw = 0.7,  grid=False )
+
+        ax = ticks(ax, decade=True)
+        
+        #Create label for axis
+        plt.xlabel( 'Year' )
+        plt.ylabel( 'C:D Ratio' )
+
+        fill_in(ax , df , scenario1.color ,low_percentile = 5 , high_percentile = 95)
+
+        plt.legend(handles = [ scenario1.line ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+
+
+        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_CD_ratio',domain, model, str(begin), str(end) ]) + '.png' ) 
+
+        plt.savefig( output_filename )
+        pdf.savefig()
+        plt.close()
+    except :
+        pass
+
+
 def launcher(obs_json_fn, model , out ) :
 
     from collections import defaultdict
 
+
     json = os.path.join(out , 'JSON' , model + '.json' )
     json_obs = os.path.join( obs_json_fn )
-    print model
-    print out
-    print json
-    print json_obs
-    scenario1 = Scenario( json, model, 'scenario1', model , '#000000')
-    observed = Scenario( json_obs, model, 'Observed', "Historical", '#B22222' )
 
-    visual = os.path.join( out , 'Plots_Julien_TBS' )
+    mod_obj= Scenario( json, model, 'scenario1', model , '#000000')
+    hist_obj = Scenario( json_obs, model, 'Observed', "Historical", '#B22222' )
+
+    visual = os.path.join( out , 'Plots_SERDP' )
     if not os.path.exists( visual ):
         os.mkdir( visual )
 
@@ -607,29 +604,27 @@ def launcher(obs_json_fn, model , out ) :
     if not os.path.exists( output_path ) :
         os.makedirs( output_path )
 
-    for i in scenario1.domains :
+    for i in mod_obj.domains :
         _tmp = os.path.join(output_path,i)
         if not os.path.exists( _tmp ) :
             os.makedirs( _tmp )
+    for domain in mod_obj.domains:
+        pdf = os.path.join( output_path, '_'.join([ model, domain ,'plots']) + '.pdf' )
 
-    pdf = os.path.join( visual, '_'.join([ model,'plots']) + '.pdf' )
+        with PdfPages(pdf) as pdf:
 
-    with PdfPages(pdf) as pdf:
+            for metric in mod_obj.metrics :
+                if metric not in [ 'veg_counts' , 'all_fire_sizes']:
+                    decade_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range ,domain)
+                    Alec_boxplot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain)
+                    bar_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain)
+                    compare_metric(mod_obj , hist_obj , output_path , pdf, model , metric, year_range ,domain , cumsum=False)
 
-        for metric in scenario1.metrics :
-            if metric not in [ 'veg_counts' , 'all_fire_sizes']:
-                print metric
-                decade_plot(scenario1 , observed , output_path , pdf, model , metric, year_range)
-                Alec_boxplot(scenario1 , observed , output_path , pdf, model , metric, year_range)
-                bar_plot(scenario1 , observed , output_path , pdf, model , metric, year_range)
-                compare_metric(scenario1 , observed , output_path , pdf, model , metric, year_range , cumsum=False)
+                else : pass
 
-
-            else : pass
-
-        compare_vegcounts(scenario1  , observed , output_path , pdf, model , 'veg_counts', year_range)
-        CD_ratio(scenario1 , observed , output_path , pdf, model , 'veg_counts', year_range)
-        compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , 'all_fire_sizes', year_range )
-        compare_metric(scenario1 , observed , output_path , pdf, model , 'total_area_burned', year_range , cumsum=True)
+            compare_vegcounts(mod_obj  , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
+            CD_ratio(mod_obj , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
+            compare_cab_vs_fs(mod_obj , hist_obj , output_path , pdf, model , 'all_fire_sizes', year_range , domain)
+            compare_metric(mod_obj , hist_obj , output_path , pdf, model , 'total_area_burned', year_range ,domain, cumsum=True)
 
 
