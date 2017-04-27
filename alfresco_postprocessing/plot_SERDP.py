@@ -617,7 +617,7 @@ def launcher(obs_json_fn, model , out ) :
         with PdfPages(pdf) as pdf:
 
             for metric in mod_obj.metrics :
-                if metric not in [ 'veg_counts' , 'all_fire_sizes']:
+                if metric not in [ 'veg_counts' , 'all_fire_sizes' , 'severity_counts']:
                     decade_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range ,domain)
                     Alec_boxplot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain)
                     bar_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain)
