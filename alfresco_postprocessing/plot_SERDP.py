@@ -449,13 +449,14 @@ def compare_metric(scenario1 , observed , output_path , pdf, model , graph_varia
 
     #Create label for axis
     plt.xlabel( 'Year' )
-    if metric = "number_of_fires":
-         plt.ylabel( 'Number of Fires' )
-    if metric = "total_area_burned":
-        plt.ylabel( 'Area Burned ('+'$\mathregular{km^2}$' + ')' )
-    if metric = "avg_fire_size":   
-        plt.ylabel( 'Average Fire size ('+'$\mathregular{km^2}$' + ')' )
+    if graph_variable == 'avg_fire_size' :
+        ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
 
+    elif graph_variable == 'number_of_fires' :
+        ylabel = 'Number of Fires'
+
+    elif graph_variable == 'total_area_burned' :
+        ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
     ax = ticks(ax , decade=True)
 
     #have to pass the scenario object so they are avalaible for color definition
