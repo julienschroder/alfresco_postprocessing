@@ -1,10 +1,8 @@
-#Need to fix a bunch of things, is there a way to make this multiprocessing?
-#Need to fix late reference to scenario1 from SERDP and hopefully build a way to add other models
-
 
 import pandas as pd
 import numpy as np
 import glob, os, ast, sys,argparse
+import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -451,7 +449,12 @@ def compare_metric(scenario1 , observed , output_path , pdf, model , graph_varia
 
     #Create label for axis
     plt.xlabel( 'Year' )
-    plt.ylabel( 'Area burned ('+'$\mathregular{km^2}$' + ')' )
+    if metric = "number_of_fires":
+         plt.ylabel( 'Number of Fires' )
+    if metric = "total_area_burned":
+        plt.ylabel( 'Area Burned ('+'$\mathregular{km^2}$' + ')' )
+    if metric = "avg_fire_size":   
+        plt.ylabel( 'Average Fire size ('+'$\mathregular{km^2}$' + ')' )
 
     ax = ticks(ax , decade=True)
 
@@ -583,7 +586,7 @@ def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, y
         pass
 
 
-def launcher_SERDP(obs_json_fn, model , out ) :
+def launcher(obs_json_fn, model , out ) :
 
     from collections import defaultdict
 
