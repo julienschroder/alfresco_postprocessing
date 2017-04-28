@@ -364,7 +364,7 @@ def bar_plot(scenario1 , observed , output_path , pdf, model , graph_variable,ye
 
     #Create label for axis
     plt.ylabel( ylabel )
-    plt.xlabel( 'Year' )
+    plt.xlabel( 'Years' )
     plt.ylim(ymin=0 ) 
 
     ax = ticks(ax)
@@ -372,49 +372,6 @@ def bar_plot(scenario1 , observed , output_path , pdf, model , graph_variable,ye
     plt.legend(handles = [ scenario1.patch],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
     output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_indiv_bar', domain,graph_variable, model , str(begin), str(end)]) + '.png' )
-
-    plt.savefig( output_filename )
-    pdf.savefig()
-    plt.close()
-
-def compare_area_burned(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , cumsum=True , *args):
-    #This plot compare the cumulative area burn for managed, unmanaged and historical period
-
-
-    begin, end = year_range
-
-    #Set some Style and settings for the plots
-    plot_title = 'Cumulative Sum of Annual Area Burned %d-%d \n ALFRESCO, %s, %s, %s' % ( begin, end, scenario1.model,scenario1.mscenario,underscore_fix(domain) )
-
-    #Handling the historical, oserved data
-    if cumsum == True :
-        obs_domain = np.cumsum( observed.__dict__[graph_variable][domain].ix[begin : ] )
-    else : 
-        obs_domain = observed.__dict__[graph_variable][domain].ix[begin : ]
-
-    data = {scen_arg.scenario :scen_arg.__dict__[graph_variable][domain].ix[begin : end] for scen_arg in [scenario1]}
-
-    df = df_processing2(data , cumsum_arg = cumsum)
-
-    #checking if colors_list list work
-    ax = df.plot( legend=False, color=['0.75'],  grid=False )
-    df.mean(axis=1).plot(ax=ax , legend=False, color = scenario1.color, title=plot_title,lw = 1,  grid=False)
-    obs_domain.plot( ax=ax,legend=False, color=observed.color, grid=False, label= "observed" ,lw = 1)
-
-    #Create label for axis
-    plt.xlabel( 'Year' )
-    plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')' )
-
-    ax = ticks(ax , decade=True)
-
-    #have to pass the scenario object so they are avalaible for color definition
-    replicate = mlines.Line2D([], [], linewidth=1.2, color='0.75', label= 'Replicates' )
-    plt.legend(handles = [ scenario1.line , observed.line, replicate],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
-
-    if cumsum == True :
-        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_cumsum',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
-    else : 
-        output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_lines_annual',domain,graph_variable, model , str(begin), str(end)]) + '.png' )
 
     plt.savefig( output_filename )
     pdf.savefig()
@@ -448,7 +405,7 @@ def compare_metric(scenario1 , observed , output_path , pdf, model , graph_varia
     obs_domain.plot( ax=ax,legend=False, color=observed.color, grid=False, label= "observed" ,lw = 1)
 
     #Create label for axis
-    plt.xlabel( 'Year' )
+    plt.xlabel( 'Years' )
     if graph_variable == 'avg_fire_size' :
         ylabel ='Average Fire Size ('+'$\mathregular{km^2}$' + ')' 
 
@@ -457,6 +414,9 @@ def compare_metric(scenario1 , observed , output_path , pdf, model , graph_varia
 
     elif graph_variable == 'total_area_burned' :
         ylabel = 'Area Burned in ('+'$\mathregular{km^2}$' + ')'
+
+    else : 'Error with Title'
+    plt.ylabel( ylabel )
     ax = ticks(ax , decade=True)
 
     #have to pass the scenario object so they are avalaible for color definition
@@ -500,8 +460,6 @@ def compare_cab_vs_fs(scenario1 , observed , output_path , pdf, model , graph_va
 
     wrangling(scenario1.__dict__[graph_variable][domain].ix[begin : end] , scenario1.color ,'scenario1')
     wrangling(observed.__dict__[graph_variable][domain].ix[begin : ], observed.color , 'observed')
-
-    ax = ticks(ax)
 
     #Create label for axis
     plt.ylabel( 'Area burned in ('+'$\mathregular{km^2}$' + ')' )
@@ -587,12 +545,12 @@ def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, y
         pass
 
 
-def launcher(obs_json_fn, model , out ) :
+def launcher_SERDP(obs_json_fn,src_path, model , out ) :
 
     from collections import defaultdict
 
 
-    json = os.path.join(out , 'JSON' , model + '.json' )
+    json = os.path.join(src_path , 'JSON' , model + '.json' )
     json_obs = os.path.join( obs_json_fn )
 
     mod_obj= Scenario( json, model, 'scenario1', model , '#000000')
@@ -616,18 +574,13 @@ def launcher(obs_json_fn, model , out ) :
 
         with PdfPages(pdf) as pdf:
 
-            for metric in mod_obj.metrics :
-                if metric not in [ 'veg_counts' , 'all_fire_sizes' , 'severity_counts']:
-                    decade_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range ,domain)
-                    Alec_boxplot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain)
-                    bar_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain)
-                    compare_metric(mod_obj , hist_obj , output_path , pdf, model , metric, year_range ,domain , cumsum=False)
-
-                else : pass
-
-            compare_vegcounts(mod_obj  , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
-            CD_ratio(mod_obj , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
-            compare_cab_vs_fs(mod_obj , hist_obj , output_path , pdf, model , 'all_fire_sizes', year_range , domain)
+            _ = [decade_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range ,domain) for metric in mod_obj.metrics if metric not in [ 'veg_counts' , 'all_fire_sizes', 'severity_counts']]
+            _ = [compare_metric(mod_obj , hist_obj , output_path , pdf, model , metric, year_range ,domain , cumsum=False) for metric in mod_obj.metrics if metric not in [ 'veg_counts' , 'all_fire_sizes' , 'severity_counts']]
             compare_metric(mod_obj , hist_obj , output_path , pdf, model , 'total_area_burned', year_range ,domain, cumsum=True)
+            _ = [bar_plot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain) for metric in mod_obj.metrics if metric not in [ 'veg_counts' , 'all_fire_sizes' , 'severity_counts']]
+            CD_ratio(mod_obj , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
+            compare_vegcounts(mod_obj  , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
+            compare_cab_vs_fs(mod_obj , hist_obj , output_path , pdf, model , 'all_fire_sizes', year_range , domain)
+            _ = [Alec_boxplot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain) for metric in mod_obj.metrics if metric not in [ 'veg_counts' , 'all_fire_sizes', 'severity_counts']]
 
 
