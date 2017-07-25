@@ -499,7 +499,7 @@ def compare_vegcounts(scenario1  , observed , output_path , pdf, model , graph_v
 
             fill_in(ax , df , scenario1.color ,low_percentile = 5 , high_percentile = 95)
 
-            plt.legend(handles = [ scenario1.line ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+            plt.legend(handles = [ scenario1.line , replicate ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
             output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_annual_areaveg_line',model, domain, veg_name.replace(' ', '' ), str(begin), str(end) ]) + '.png' ) 
 
@@ -581,6 +581,6 @@ def launcher_SERDP(obs_json_fn,src_path, model , out ) :
             CD_ratio(mod_obj , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
             compare_vegcounts(mod_obj  , hist_obj , output_path , pdf, model , 'veg_counts', year_range, domain)
             compare_cab_vs_fs(mod_obj , hist_obj , output_path , pdf, model , 'all_fire_sizes', year_range , domain)
-            _ = [Alec_boxplot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain) for metric in mod_obj.metrics if metric not in [ 'veg_counts' , 'all_fire_sizes', 'severity_counts']]
+#             _ = [Alec_boxplot(mod_obj , hist_obj , output_path , pdf, model , metric, year_range, domain) for metric in mod_obj.metrics if metric not in [ 'veg_counts' , 'all_fire_sizes', 'severity_counts']]
 
 
