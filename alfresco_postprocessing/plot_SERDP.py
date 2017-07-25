@@ -498,7 +498,7 @@ def compare_vegcounts(scenario1  , observed , output_path , pdf, model , graph_v
             plt.ylabel( 'Area Covered ('+'$\mathregular{km^2}$' + ')' )
 
             fill_in(ax , df , scenario1.color ,low_percentile = 5 , high_percentile = 95)
-
+            replicate = mlines.Line2D([], [], linewidth=1.2, color='0.75', label= 'Replicates' )
             plt.legend(handles = [ scenario1.line , replicate ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
 
             output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_annual_areaveg_line',model, domain, veg_name.replace(' ', '' ), str(begin), str(end) ]) + '.png' ) 
@@ -507,7 +507,10 @@ def compare_vegcounts(scenario1  , observed , output_path , pdf, model , graph_v
             pdf.savefig()
             plt.close()
         except :
-            pass
+            if not plt :
+                pass
+            else : 
+                plt.close()
 
 
 def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, year_range , domain , *args):
@@ -542,7 +545,10 @@ def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, y
         pdf.savefig()
         plt.close()
     except :
-        pass
+        if not plt :
+            pass
+        else : 
+            plt.close()
 
 
 def launcher_SERDP(obs_json_fn,src_path, model , out ) :
