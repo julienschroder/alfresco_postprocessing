@@ -535,8 +535,8 @@ def CD_ratio(scenario1 , observed , output_path , pdf, model , graph_variable, y
         plt.ylabel( 'C:D Ratio' )
 
         fill_in(ax , df , scenario1.color ,low_percentile = 5 , high_percentile = 95)
-
-        plt.legend(handles = [ scenario1.line ],fontsize='medium',loc='best',borderaxespad=0.,ncol=1,frameon=False)
+        replicate = mlines.Line2D([], [], linewidth=1.2, color='0.75', label= 'Replicates' )
+        plt.legend(handles = [ scenario1.line , replicate ], fontsize='medium', loc='best', borderaxespad=0. ,ncol=1 ,frameon=False)
 
 
         output_filename = os.path.join( output_path, domain , '_'.join([ 'alfresco_CD_ratio',domain, model, str(begin), str(end) ]) + '.png' ) 
