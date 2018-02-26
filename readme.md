@@ -1,6 +1,13 @@
+Version tweaked for Julien's plotting 
+The Jupiter notebook is stored on Atlas and launched from there, it helps setting a bunch of options in a graphic way
+It then launched PP_launcher.py with the desired options
+The new plotting in alfresco_postprocessing/alfresco_postprocessing/ plot_SERDP which has a function called launcher_SERDP which is called in the launcher.
+It contains : Boxplot, Decade plots, bar plots, compare metric (line plot), cab vs fs, veg counts as well as CD ratio
+It was built in order to be able to compare two set of data for the SERDP projects
+
 ## ALFRESCO Post-Processing
 --------------------------
-**version 3.1**
+**version 3.1** 
 
 **Python Module for calculating summary statistics across the Geospatial Raster (GeoTiff) outputs from the [ALFRESCO Fire Dynamics Model](https://www.snap.uaf.edu/projects/alfresco-habitat)**
 
